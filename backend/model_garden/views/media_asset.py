@@ -1,13 +1,9 @@
-import os
 from collections import defaultdict
 import io
 import logging
 import zipfile
-from uuid import uuid4
 
 import botocore.exceptions
-from django.conf import settings
-from django.core.files.base import ContentFile, File
 from django.db.utils import IntegrityError
 from django_filters import rest_framework as filters
 from rest_framework import status
@@ -115,12 +111,6 @@ class MediaAssetViewSet(viewsets.ModelViewSet):
     for filename, file_obj in files_to_upload:
       try:
         media_asset = MediaAsset.objects.create(dataset=dataset, filename=filename)
-        if settings.MEDIA_STORAGE_TYPE.lower() == 'local':
-          media_asset.local_image.save(
-            name=f'{uuid4()}{os.path.splitext(filename)[1]}',
-            content=ContentFile(file_obj.read()),
-            save=True
-          )
       except IntegrityError as e:
         logger.error(f"Failed to create media asset: {e}")
         raise ParseError(
@@ -128,11 +118,11 @@ class MediaAssetViewSet(viewsets.ModelViewSet):
         )
       else:
         media_assets_to_upload.append((media_asset, file_obj))
-    if settings.MEDIA_STORAGE_TYPE.lower() == 's3':
-      self._upload_media_assets_to_s3(
-        bucket_name=bucket.name,
-        media_assets_to_upload=media_assets_to_upload,
-      )
+
+    self._upload_media_assets_to_s3(
+      bucket_name=bucket.name,
+      media_assets_to_upload=media_assets_to_upload,
+    )
 
     return Response(data={'message': f"{len(media_assets_to_upload)} media asset(s) uploaded"})
 
