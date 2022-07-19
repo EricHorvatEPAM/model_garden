@@ -33,12 +33,13 @@ class CvatService:
   def _get_url(self, path: str) -> str:
     return f"{settings.CVAT_API_URL}/{path}"
 
-  def _request(self, method: str, path: str, params: dict = None, data: dict = None) -> requests.Response:
+  def _request(self, method: str, path: str, params: dict = None,
+               data: dict = None, files: list = None) -> requests.Response:
     url = self._get_url(path)
 
     response = None
     try:
-      response = getattr(self._session, method)(url=url, params=params, json=data)
+      response = getattr(self._session, method)(url=url, params=params, files=files, json=data)
       try:
         response.raise_for_status()
       except requests.HTTPError as e:
@@ -61,8 +62,8 @@ class CvatService:
   def _get(self, path: str, params: Optional[dict] = None) -> requests.Response:
     return self._request(method='get', path=path, params=params)
 
-  def _post(self, path: str, data: dict) -> requests.Response:
-    return self._request(method='post', path=path, data=data)
+  def _post(self, path: str, data: dict = None, files: list = None) -> requests.Response:
+    return self._request(method='post', path=path, data=data, files=files,)
 
   def _authenticate(self):
     response = self._post(
@@ -95,9 +96,10 @@ class CvatService:
     name: str,
     assignee_id: int,
     owner_id: int,
-    remote_files: List,
+    files: List,
     labels: Optional[List] = None,
     image_quality: Optional[int] = 70,
+    multipart: bool = False
   ) -> dict:
     if labels is None:
       labels = [
@@ -126,13 +128,12 @@ class CvatService:
       },
     )
     task = response.json()
-
-    response = self._post(
-      path=f"tasks/{task['id']}/data",
-      data={
-        'remote_files': remote_files,
-      },
-    )
+    params = dict(path=f"tasks/{task['id']}/data",)
+    if multipart:
+      params['files'] = files
+    else:
+      params['data'] = {'remote_files': files}
+    response = self._post(**params)
     task['data'] = response.json()
     return task
 
