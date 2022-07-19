@@ -58,6 +58,7 @@ INSTALLED_APPS = [
   'django_filters',
   'model_garden',
   'rest_framework',
+  'thumbnails',
 ]
 
 MIDDLEWARE = [
@@ -183,7 +184,7 @@ DJANGO_ROOT_EMAIL = env('DJANGO_ROOT_EMAIL', default=None)
 DJANGO_ROOT_PASSWORD = env('DJANGO_ROOT_PASSWORD', default=None)
 
 # AWS
-AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID', default=None)
+AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID', default=None)  # No need to put in for MEDIA_STORAGE_TYPE='LOCAL'
 AWS_SECRET_KEY = env('AWS_SECRET_KEY', default=None)
 
 # CVAT
@@ -201,3 +202,25 @@ CVAT_ROOT_USER_PASSWORD = env('CVAT_ROOT_USER_PASSWORD', default='')
 TASK_STATUSES_WORKER_CHUNK_SIZE = env('TASK_STATUSES_WORKER_CHUNK_SIZE', cast=int, default=5)
 TASK_STATUSES_WORKER_PERIOD = env('TASK_STATUSES_WORKER_PERIOD', cast=int, default=10)
 TASK_STATUSES_WORKER_TIMEOUT = env('TASK_STATUSES_WORKER_TIMEOUT', cast=int, default=60)
+
+# Local Media Asset Thumbnails
+MEDIA_STORAGE_TYPE = env('MEDIA_STORAGE_TYPE', default='LOCAL')  # LOCAL | S3
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+THUMBNAILS = {
+    'METADATA': {
+        'BACKEND': 'thumbnails.backends.metadata.DatabaseBackend',
+    },
+    'STORAGE': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        # You can also use Amazon S3 or any other Django storage backends
+    },
+    'SIZES': {
+        'large': {
+            'PROCESSORS': [
+                {'PATH': 'thumbnails.processors.resize', 'width': 232, 'height': 200},
+                {'PATH': 'thumbnails.processors.flip', 'direction': 'horizontal'}
+            ],
+        },
+    }
+}

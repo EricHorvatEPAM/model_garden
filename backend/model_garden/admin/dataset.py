@@ -99,3 +99,9 @@ def delete_files_in_s3(bucket: str, keys: List[str]) -> List[DeleteError]:
     )
 
   return errors
+
+
+@admin.register(MediaAsset)
+class MediaAssetAdmin(admin.ModelAdmin, FilterCreatedFixture):
+    pass
+
