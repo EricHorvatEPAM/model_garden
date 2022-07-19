@@ -153,11 +153,14 @@ class LabelingTaskViewSet(ModelViewSet):
         local_files = settings.MEDIA_STORAGE_TYPE.lower() == 'local'
         if local_files:
           files = [
-            (f'client_files[{index}]', (media_asset.filename, open(media_asset.local_image.path, 'rb'), 'image/*'))
+            (
+              f'client_files[{index}]',
+              (media_asset.filename, open(media_asset.local_image.path, 'rb'), 'image/*')
+            )
             for index, media_asset in enumerate(chunk)
           ]
         else:
-          files = {media_asset.filename: open(media_asset.local_image.path, 'rb') for media_asset in chunk}
+          files = [media_asset.remote_path for media_asset in chunk]
         task_data = cvat_service.create_task(
           name=chunk_task_name,
           assignee_id=assignee_id,
