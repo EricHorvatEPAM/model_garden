@@ -11,7 +11,7 @@ class Dataset(BaseModel):
     ]
 
     path = models.CharField(max_length=512)
-    bucket = models.ForeignKey(Bucket, on_delete=models.CASCADE)
+    bucket = models.ForeignKey(Bucket, on_delete=models.CASCADE, blank=True, null=True)
 
     dataset_format = models.CharField(
         max_length=16,

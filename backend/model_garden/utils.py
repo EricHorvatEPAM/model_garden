@@ -1,5 +1,7 @@
 from typing import Iterator, Sequence, TypeVar
 
+from django.conf import settings
+
 T = TypeVar('T')
 
 
@@ -25,3 +27,7 @@ def strip_s3_key_prefix(prefix: str, key: str, delimiter: str = '/') -> str:
     return suffix[len(delimiter):]
 
   return suffix
+
+
+def is_local_media_storage():
+  return settings.MEDIA_STORAGE_TYPE and settings.MEDIA_STORAGE_TYPE.lower() == 'local'

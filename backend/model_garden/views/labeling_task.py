@@ -20,7 +20,7 @@ from model_garden.serializers import (
   LabelingTaskSerializer,
 )
 from model_garden.services.cvat import CvatService, CVATServiceException
-from model_garden.utils import chunkify
+from model_garden.utils import chunkify, is_local_media_storage
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ class LabelingTaskViewSet(ModelViewSet):
       logger.info(f"Creating task '{task_name}' with {len(chunk)} files")
       chunk_task_name = f"{task_name}.{(chunk_id + int(last_task_number) + 1):02d}"
       try:
-        local_files = settings.MEDIA_STORAGE_TYPE.lower() == 'local'
+        local_files = is_local_media_storage()
         if local_files:
           files = [
             (

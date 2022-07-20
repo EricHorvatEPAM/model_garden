@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from model_garden.constants import LabelingTaskStatus
 from model_garden.models import MediaAsset
+from model_garden.utils import is_local_media_storage
 
 
 class MediaAssetIDSerializer(serializers.Serializer):
@@ -17,6 +18,7 @@ class MediaAssetSerializer(serializers.ModelSerializer):
   dataset_id = serializers.SerializerMethodField()
   remote_label_path = serializers.SerializerMethodField()
   labeling_task_name = serializers.SerializerMethodField()
+  remote_path = serializers.SerializerMethodField()
 
   class Meta:
     model = MediaAsset
@@ -30,6 +32,11 @@ class MediaAssetSerializer(serializers.ModelSerializer):
 
   def get_dataset_id(self, obj: MediaAsset) -> str:
     return obj.dataset.id
+
+  def get_remote_path(self, obj: MediaAsset) -> str:
+    if is_local_media_storage() and obj.local_image:
+      return obj.local_image.thumbnails.large.url
+    return obj.remote_path
 
   def get_labeling_task_name(self, obj: MediaAsset) -> str:
     if obj.labeling_task:

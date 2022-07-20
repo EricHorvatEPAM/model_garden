@@ -27,6 +27,7 @@ from model_garden.views import (
   HealthCheckView,
   LabelingTaskViewSet,
   MediaAssetViewSet,
+  ConfigsAPIView,
 )
 
 router = routers.DefaultRouter()
@@ -41,4 +42,5 @@ urlpatterns = [
   path('api/', include(router.urls)),
   path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
   path('health_check/', HealthCheckView.as_view()),
+  path('configs/', ConfigsAPIView.as_view()),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
