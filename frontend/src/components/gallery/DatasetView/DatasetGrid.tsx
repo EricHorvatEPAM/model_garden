@@ -3,6 +3,7 @@ import { Link as RouterLink, useRouteMatch } from 'react-router-dom';
 import { makeStyles, Grid, Link, Paper } from '@material-ui/core';
 import blueGrey from '@material-ui/core/colors/blueGrey';
 import PhotoLibraryIcon from '@material-ui/icons/PhotoLibrary';
+import { backendHostPort } from '../../../api/environment';
 import { Empty } from 'antd';
 
 import { IDataset } from '../../../models';
@@ -129,7 +130,11 @@ export const DatasetGrid = ({
                 {dataset.preview_image ? (
                   <img
                     className={classes.img}
-                    src={dataset.preview_image}
+                    src={
+                      dataset.preview_image.startsWith('http')
+                        ? dataset.preview_image
+                        : `${backendHostPort}${dataset.preview_image}`
+                    }
                     alt={dataset.path}
                   ></img>
                 ) : (

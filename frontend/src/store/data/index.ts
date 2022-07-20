@@ -2,11 +2,16 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { IDataState } from './types';
 import { IDataset } from '../../models';
-import { getBucketsRequest, getDatasetsRequest, getLabelingToolUsersRequest } from '../../api';
+import { getBucketsRequest, getDatasetsRequest, getLabelingToolUsersRequest, getConfigsRequest } from '../../api';
 
 export const getBuckets = createAsyncThunk('fetchBuckets', async () => {
   const response = await getBucketsRequest();
   return response.data.results.map((item: any) => ({ ...item, id: `${item.id}` }));
+});
+
+export const getConfigs = createAsyncThunk('fetchConfigs', async () => {
+  const response = await getConfigsRequest();
+  return response.data;
 });
 
 export const getDatasets = createAsyncThunk('data/fetchDatasets', async (bucketId: string) => {
@@ -28,7 +33,8 @@ export const getLabelingToolUsers = createAsyncThunk('fetchUsers', async () => {
 export const dataInit = createAsyncThunk('data/init', async () => {
   //special thunk that loads buckets and users in one action
   //this models the action as 'an event' instead of a getter
-  const [bucketsResponse, usersResponse] = await Promise.allSettled([
+  const [configsResponse, bucketsResponse, usersResponse] = await Promise.allSettled([
+    getConfigsRequest(),
     getBucketsRequest(),
     getLabelingToolUsersRequest()
   ]);
@@ -39,10 +45,14 @@ export const dataInit = createAsyncThunk('data/init', async () => {
   if (bucketsResponse.status === 'rejected') {
     toast.error(bucketsResponse.reason.message || 'Error fetching Buckets', { autoClose: false });
   }
+  if (configsResponse.status === 'rejected') {
+    toast.error(configsResponse.reason.message || 'Error fetching Configs', { autoClose: false });
+  }
 
   return {
     buckets: (bucketsResponse as any).value?.data.results.map((item: any) => ({ ...item, id: `${item.id}` })) ?? [],
-    labelingToolUsers: (usersResponse as any).value?.data ?? []
+    labelingToolUsers: (usersResponse as any).value?.data ?? [],
+    configs: (configsResponse as any).value?.data ?? {}
   };
 });
 const dataSlice = createSlice({
@@ -50,7 +60,8 @@ const dataSlice = createSlice({
   initialState: {
     buckets: [], // list of buckets that populates the dropdown field.
     datasets: [], // datasets field to display datasetCard.
-    labelingToolUsers: [] // list of users to populate dropdown , used in dataset and gallery modal.
+    labelingToolUsers: [], // list of users to populate dropdown , used in dataset and gallery modal.
+    configs: { use_local_storage: false } // configs to decide whether to use S3 or local storage
   } as IDataState,
   reducers: {},
   extraReducers: (builder) => {
@@ -64,9 +75,13 @@ const dataSlice = createSlice({
       .addCase(getLabelingToolUsers.fulfilled, (state, { payload }) => {
         state.labelingToolUsers = payload;
       })
+      .addCase(getConfigs.fulfilled, (state, { payload }) => {
+        state.configs = payload;
+      })
       .addCase(dataInit.fulfilled, (state, { payload }) => {
         state.buckets = payload.buckets;
         state.labelingToolUsers = payload.labelingToolUsers;
+        state.configs = payload.configs;
       });
   }
 });
