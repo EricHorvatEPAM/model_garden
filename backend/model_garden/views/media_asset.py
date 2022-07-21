@@ -219,7 +219,10 @@ class MediaAssetViewSet(viewsets.ModelViewSet):
 
     # Map list of media assets to particular bucket.
     for asset in media_assets_to_delete:
-      bucket_map[asset.dataset.bucket.name].append(asset)
+      if asset.dataset.bucket:
+        bucket_map[asset.dataset.bucket.name].append(asset)
+      if asset.local_image:
+        asset.local_image.delete(save=True)
 
     # Delete media assets from each bucket.
     for bucket, assets in bucket_map.items():

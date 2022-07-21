@@ -36,7 +36,14 @@ export const CustomDialogContent = withStyles({
 })(DialogContent);
 
 const LabelingTaskComponent: React.FC<ILabelingProps> = (props) => {
-  const { buckets, datasets, users, filesCount, openCreateTaskDialog } = props;
+  const {
+    configs,
+    buckets,
+    datasets,
+    users,
+    filesCount,
+    openCreateTaskDialog
+  } = props;
   const {
     getDatasets: propsGetDatasets,
     getUnsignedImagesCount: propsGetUnsignedImagesCount,
@@ -45,7 +52,7 @@ const LabelingTaskComponent: React.FC<ILabelingProps> = (props) => {
     setOpenCreateTaskDialog: propsSetOpenCreateTaskDialog
   } = props;
 
-  const [currentBucketId, setCurrentBucketId] = useState('');
+  const [currentBucketId, setCurrentBucketId] = useState('0');
   const [currentDataset, setCurrentDataset] = useState({
     id: '',
     path: '',
@@ -68,7 +75,9 @@ const LabelingTaskComponent: React.FC<ILabelingProps> = (props) => {
   });
 
   useEffect(() => {
-    if (currentBucketId) {
+    if (configs.use_local_storage) {
+      propsGetDatasets('');
+    } else if (currentBucketId) {
       propsGetDatasets(currentBucketId);
     }
   }, [currentBucketId, propsGetDatasets]);
@@ -203,18 +212,20 @@ const LabelingTaskComponent: React.FC<ILabelingProps> = (props) => {
       <DialogTitle>Create Tasks</DialogTitle>
       <form onSubmit={onSubmit} className="dialog-form">
         <CustomDialogContent dividers>
-          <FormControl>
-            <InputLabel id="task-bucket-name">Bucket</InputLabel>
-            <Select
-              labelId="task-bucket-name"
-              name="bucketId"
-              label="Bucket"
-              value={currentBucketId}
-              onChange={handleBucketChange}
-            >
-              {bucketsSelectOptions}
-            </Select>
-          </FormControl>
+          {!configs.use_local_storage && (
+            <FormControl>
+              <InputLabel id="task-bucket-name">Bucket</InputLabel>
+              <Select
+                labelId="task-bucket-name"
+                name="bucketId"
+                label="Bucket"
+                value={currentBucketId}
+                onChange={handleBucketChange}
+              >
+                {bucketsSelectOptions}
+              </Select>
+            </FormControl>
+          )}
           <Autocomplete
             onChange={handleDatasetChange}
             options={datasets}
@@ -303,6 +314,7 @@ const LabelingTaskComponent: React.FC<ILabelingProps> = (props) => {
 };
 
 const mapStateToProps = ({ labelingTask, data }: TAppState) => ({
+  configs: data.configs,
   buckets: data.buckets,
   datasets: data.datasets,
   users: data.labelingToolUsers,

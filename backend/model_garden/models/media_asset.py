@@ -1,6 +1,5 @@
 from urllib.parse import urljoin, quote
 
-from django.conf import settings
 from django.db import models
 from thumbnails.fields import ImageField
 
