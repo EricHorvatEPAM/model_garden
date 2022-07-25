@@ -8,6 +8,7 @@ import {
 } from '@material-ui/core';
 import blueGrey from '@material-ui/core/colors/blueGrey';
 import GetAppIcon from '@material-ui/icons/GetApp';
+import { backendHostPort } from '../../../api/environment';
 
 const useStyles = makeStyles(() => ({
   card: {
@@ -106,7 +107,15 @@ export const ImageCard = ({
       </div>
 
       <div className={classes.imgWrap}>
-        <img className={classes.img} src={remote_path} alt={fileName}></img>
+        <img
+          className={classes.img}
+          src={
+            remote_path.startsWith('http')
+              ? remote_path
+              : `${backendHostPort}${remote_path}`
+          }
+          alt={fileName}
+        ></img>
       </div>
       {remote_label_path && (
         <button

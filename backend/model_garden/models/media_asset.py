@@ -1,6 +1,8 @@
 from urllib.parse import urljoin, quote
 
+from django.conf import settings
 from django.db import models
+from thumbnails.fields import ImageField
 
 from model_garden.constants import DatasetFormat
 from model_garden.models import BaseModel
@@ -13,6 +15,7 @@ class MediaAsset(BaseModel):
     related_name='media_assets',
   )
   filename = models.CharField(max_length=512)
+  local_image = ImageField(null=True, blank=True, upload_to='images', pregenerated_sizes=("large",))
   labeling_asset_filepath = models.CharField(max_length=512, blank=True, null=True)
   labeling_task = models.ForeignKey(
     'LabelingTask',

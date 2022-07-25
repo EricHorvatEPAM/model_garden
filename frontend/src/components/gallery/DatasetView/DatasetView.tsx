@@ -31,12 +31,16 @@ const DatasetView = (): JSX.Element => {
   const classes = useStyles();
   const dispatch = useAppDispatch();
   const buckets = useTypedSelector(({ data }) => data.buckets);
+  const configs = useTypedSelector(({ data }) => data.configs);
   const [currentBucketId, setCurrentBucketId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreatingTask, setIsCreatingTask] = useState(false);
 
   useEffect(() => {
-    if (buckets.length === 1) {
+    if (configs.use_local_storage) {
+      setCurrentBucketId('0');
+      dispatch(getDatasets(''));
+    } else if (buckets.length === 1) {
       setCurrentBucketId(buckets[0].id);
       dispatch(getDatasets(buckets[0].id));
     }
@@ -50,24 +54,26 @@ const DatasetView = (): JSX.Element => {
   return (
     <Container maxWidth={'xl'}>
       <Grid container spacing={2}>
-        <Grid item xs={12} sm={6} md={3}>
-          <FormControl size="small">
-            <InputLabel id="task-bucket-name">Bucket</InputLabel>
-            <Select
-              labelId="task-bucket-name"
-              name="bucketId"
-              label="Bucket"
-              value={currentBucketId}
-              onChange={HandleChange}
-            >
-              {buckets.map((bucket: IBucket, index: any) => (
-                <MenuItem key={index} value={bucket.id}>
-                  {bucket.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
+        {!configs.use_local_storage && (
+          <Grid item xs={12} sm={6} md={3}>
+            <FormControl size="small">
+              <InputLabel id="task-bucket-name">Bucket</InputLabel>
+              <Select
+                labelId="task-bucket-name"
+                name="bucketId"
+                label="Bucket"
+                value={currentBucketId}
+                onChange={HandleChange}
+              >
+                {buckets.map((bucket: IBucket, index: any) => (
+                  <MenuItem key={index} value={bucket.id}>
+                    {bucket.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+        )}
         <Grid item xs={12} sm={6} md={3}>
           <TextField
             name="path"

@@ -1,9 +1,12 @@
-from collections import defaultdict
 import io
 import logging
+import os
 import zipfile
+from collections import defaultdict
+from uuid import uuid4
 
 import botocore.exceptions
+from django.core.files.base import ContentFile
 from django.db.utils import IntegrityError
 from django_filters import rest_framework as filters
 from rest_framework import status
@@ -22,7 +25,7 @@ from model_garden.serializers import (
   MediaAssetIDSerializer,
 )
 from model_garden.services.s3 import S3Client, image_ext_filter, S3ServiceException
-from model_garden.utils import strip_s3_key_prefix
+from model_garden.utils import strip_s3_key_prefix, is_local_media_storage
 
 logger = logging.getLogger(__name__)
 
@@ -56,11 +59,14 @@ class MediaAssetViewSet(viewsets.ModelViewSet):
       raise ValidationError(detail={"message": "Missing files in request"})
 
     bucket_id = request.data.get('bucketId')
-    if not bucket_id:
+    use_local_storage = is_local_media_storage()
+    if not use_local_storage and not bucket_id:
       raise ValidationError(detail={"message": "Missing 'bucketId' in request"})
 
     try:
-      bucket = Bucket.objects.get(id=bucket_id)
+      bucket = None
+      if not use_local_storage:
+        bucket = Bucket.objects.get(id=bucket_id)
     except Bucket.DoesNotExist:
       raise ValidationError(detail={"message": f"Bucket with id='{bucket_id}' not found"})
 
@@ -83,7 +89,7 @@ class MediaAssetViewSet(viewsets.ModelViewSet):
 
     dataset_serializer = DatasetSerializer(data={
       'path': request.data.get('path'),
-      'bucket': bucket.pk,
+      'bucket': bucket.pk if bucket else None,
       'dataset_format': dataset_format,
     })
     dataset_serializer.is_valid(raise_exception=True)
@@ -111,6 +117,12 @@ class MediaAssetViewSet(viewsets.ModelViewSet):
     for filename, file_obj in files_to_upload:
       try:
         media_asset = MediaAsset.objects.create(dataset=dataset, filename=filename)
+        if is_local_media_storage():
+          media_asset.local_image.save(
+            name=f'{uuid4()}{os.path.splitext(filename)[1]}',
+            content=ContentFile(file_obj.read()),
+            save=True
+          )
       except IntegrityError as e:
         logger.error(f"Failed to create media asset: {e}")
         raise ParseError(
@@ -118,11 +130,11 @@ class MediaAssetViewSet(viewsets.ModelViewSet):
         )
       else:
         media_assets_to_upload.append((media_asset, file_obj))
-
-    self._upload_media_assets_to_s3(
-      bucket_name=bucket.name,
-      media_assets_to_upload=media_assets_to_upload,
-    )
+    if not is_local_media_storage():
+      self._upload_media_assets_to_s3(
+        bucket_name=bucket.name,
+        media_assets_to_upload=media_assets_to_upload,
+      )
 
     return Response(data={'message': f"{len(media_assets_to_upload)} media asset(s) uploaded"})
 
@@ -207,7 +219,10 @@ class MediaAssetViewSet(viewsets.ModelViewSet):
 
     # Map list of media assets to particular bucket.
     for asset in media_assets_to_delete:
-      bucket_map[asset.dataset.bucket.name].append(asset)
+      if asset.dataset.bucket:
+        bucket_map[asset.dataset.bucket.name].append(asset)
+      if asset.local_image:
+        asset.local_image.delete(save=True)
 
     # Delete media assets from each bucket.
     for bucket, assets in bucket_map.items():

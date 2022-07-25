@@ -4,6 +4,7 @@ from .dataset import DatasetViewSet
 from .health_check import HealthCheckView
 from .labeling_task import LabelingTaskViewSet
 from .media_asset import MediaAssetViewSet
+from .configs import ConfigsAPIView
 
 __all__ = (
   "BucketViewSet",
@@ -12,4 +13,5 @@ __all__ = (
   "HealthCheckView",
   "LabelingTaskViewSet",
   "MediaAssetViewSet",
+  "ConfigsAPIView"
 )

@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from model_garden.constants import LabelingTaskStatus
 from model_garden.models import Dataset
+from model_garden.utils import is_local_media_storage
 
 
 class DatasetSerializer(serializers.ModelSerializer):
@@ -35,7 +36,10 @@ class DatasetSerializer(serializers.ModelSerializer):
 
   def get_preview_image(self, obj):
     try:
-      return obj.media_assets.last().remote_path
+      asset = obj.media_assets.last()
+      if is_local_media_storage() and asset.local_image:
+        return asset.local_image.thumbnails.large.url
+      return asset.remote_path
     except AttributeError:
       return None
 

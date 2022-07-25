@@ -33,6 +33,7 @@ export const AddDataset: FC<any> = (props) => {
   const dispatch = useAppDispatch();
   const [files, setFiles] = useState<File[]>([]);
   const buckets = useTypedSelector((state) => state.data.buckets);
+  const configs = useTypedSelector((state) => state.data.configs);
   const [submitAction, setSubmitAction] = useState(0);
 
   useEffect(
@@ -145,18 +146,20 @@ export const AddDataset: FC<any> = (props) => {
               submitAction === index ? <item.component /> : null
             )}
           </UploadPaper>
-          <FormControl>
-            <InputLabel id="upload-images-bucket-name">Bucket</InputLabel>
-            <Controller
-              labelId="upload-images-bucket-name"
-              name="bucketId"
-              control={control}
-              rules={{ required: true }}
-              label="Bucket"
-              defaultValue=""
-              as={<Select>{BucketsSelect(buckets)}</Select>}
-            />
-          </FormControl>
+          {!configs.use_local_storage && (
+            <FormControl>
+              <InputLabel id="upload-images-bucket-name">Bucket</InputLabel>
+              <Controller
+                labelId="upload-images-bucket-name"
+                name="bucketId"
+                control={control}
+                rules={{ required: true }}
+                label="Bucket"
+                defaultValue=""
+                as={<Select>{BucketsSelect(buckets)}</Select>}
+              />
+            </FormControl>
+          )}
           <FormControl>
             <InputLabel id="dataset-format">Format</InputLabel>
             <Controller

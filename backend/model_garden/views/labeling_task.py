@@ -20,7 +20,7 @@ from model_garden.serializers import (
   LabelingTaskSerializer,
 )
 from model_garden.services.cvat import CvatService, CVATServiceException
-from model_garden.utils import chunkify
+from model_garden.utils import chunkify, is_local_media_storage
 
 logger = logging.getLogger(__name__)
 
@@ -150,12 +150,25 @@ class LabelingTaskViewSet(ModelViewSet):
       logger.info(f"Creating task '{task_name}' with {len(chunk)} files")
       chunk_task_name = f"{task_name}.{(chunk_id + int(last_task_number) + 1):02d}"
       try:
+        local_files = is_local_media_storage()
+        if local_files:
+          files = [
+            (
+              f'client_files[{index}]',
+              (media_asset.filename, open(media_asset.local_image.path, 'rb'), 'image/*')
+            )
+            for index, media_asset in enumerate(chunk)
+          ]
+        else:
+          files = [media_asset.remote_path for media_asset in chunk]
         task_data = cvat_service.create_task(
           name=chunk_task_name,
           assignee_id=assignee_id,
           owner_id=cvat_service.get_root_user()['id'],
-          remote_files=[media_asset.remote_path for media_asset in chunk],
+          files=files,
+          multipart=local_files
         )
+
       except CVATServiceException as e:
         return Response(data={'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
       else:

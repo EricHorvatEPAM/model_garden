@@ -44,7 +44,10 @@ class DatasetAdmin(admin.ModelAdmin, FilterCreatedFixture):
 
     bucket_map = defaultdict(list)
     for asset in media_assets:
-      bucket_map[asset.dataset.bucket.name].append(asset)
+      if asset.dataset.bucket:
+        bucket_map[asset.dataset.bucket.name].append(asset)
+      elif asset.local_image:
+        asset.local_image.delete(save=True)
 
     error_keys: Set[Tuple(str, str)] = set()
     for bucket, assets in bucket_map.items():
@@ -60,7 +63,7 @@ class DatasetAdmin(admin.ModelAdmin, FilterCreatedFixture):
       .filter(
         pk__in=[
           asset.pk for asset in media_assets
-          if (asset.dataset.bucket.name, asset.full_path) not in error_keys
+          if (asset.dataset.bucket.name if asset.dataset.bucket else None, asset.full_path) not in error_keys
         ],
       ).delete()
     )
@@ -69,7 +72,7 @@ class DatasetAdmin(admin.ModelAdmin, FilterCreatedFixture):
       .exclude(
         pk__in=set(
           asset.dataset.pk for asset in media_assets
-          if (asset.dataset.bucket.name, asset.full_path) in error_keys
+          if (asset.dataset.bucket.name if asset.dataset.bucket else None, asset.full_path) in error_keys
         ),
       )
       .delete()
