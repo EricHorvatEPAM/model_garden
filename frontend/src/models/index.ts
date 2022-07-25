@@ -5,3 +5,4 @@ export * from './labelingTask';
 export * from './labelingToolUser';
 export * from './tableStateProps';
 export * from './alert';
+export * from './config';

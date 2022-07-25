@@ -1,6 +1,7 @@
-import { IBucket, IDataset, LabelingToolUser } from '../../../models';
+import { IBucket, IDataset, LabelingToolUser, IConfig } from '../../../models';
 
 export interface ILabelingProps {
+  configs: IConfig;
   buckets: IBucket[];
   datasets: IDataset[];
   users: LabelingToolUser[];
