@@ -153,7 +153,7 @@ class TestCvatService(TestCase):
       name='test',
       assignee_id=2,
       owner_id=1,
-      remote_files=[
+      files=[
         "https://d3o54g14k1n39o.cloudfront.net/batch_2020-05-08/image.jpg",
       ],
     )

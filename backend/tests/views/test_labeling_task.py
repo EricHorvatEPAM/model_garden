@@ -47,7 +47,7 @@ class TestLabelingTaskViewSet(BaseAPITestCase):
       name='test.01',
       assignee_id=3,
       owner_id=1,
-      remote_files=[
+      files=[
         f'https://d3o54g14k1n39o.cloudfront.net/test_path/{media_asset.filename}',
       ],
     )
@@ -90,7 +90,7 @@ class TestLabelingTaskViewSet(BaseAPITestCase):
       name='test.01',
       assignee_id=3,
       owner_id=1,
-      remote_files=[
+      files=[
         f'https://d3o54g14k1n39o.cloudfront.net/test_path/{media_asset.filename}',
       ],
     )
